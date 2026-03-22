@@ -4,6 +4,10 @@ Console application for apply format to verilog file.
 
 ![sample](images/verilog-format.gif)
 
+## Runtime Requirement
+
+Requires Java 8 or newer (`>= 1.8`).
+
 ## How to use
 
 Application options:
