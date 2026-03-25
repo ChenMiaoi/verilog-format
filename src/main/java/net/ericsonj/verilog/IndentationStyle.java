@@ -2,6 +2,7 @@ package net.ericsonj.verilog;
 
 import java.util.LinkedList;
 import net.ericsonj.verilog.statements.Always;
+import net.ericsonj.verilog.statements.AlwaysState;
 import net.ericsonj.verilog.statements.BlockComment;
 import net.ericsonj.verilog.statements.Case;
 import net.ericsonj.verilog.statements.For;
@@ -50,6 +51,7 @@ public class IndentationStyle implements StyleImp {
     }
 
     private String processLine(FileFormat format, String line) {
+        closeCompletedSingleLineAlways(format);
 
         int recursive = 0;
         if (format.states.isEmpty() || format.states.size() == 1) {
@@ -68,6 +70,25 @@ public class IndentationStyle implements StyleImp {
         }
 
         return indent(format, line);
+    }
+
+    private void closeCompletedSingleLineAlways(FileFormat format) {
+        if (format.states.isEmpty()) {
+            return;
+        }
+
+        StatementState state = format.states.peek();
+        if (!(state instanceof AlwaysState)) {
+            return;
+        }
+
+        AlwaysState alwaysState = (AlwaysState) state;
+        if (alwaysState.getState() != AlwaysState.STATE.WAIT_END) {
+            return;
+        }
+
+        format.resCountIndent();
+        format.states.poll();
     }
 
     private String indent(FileFormat format, String line) {
