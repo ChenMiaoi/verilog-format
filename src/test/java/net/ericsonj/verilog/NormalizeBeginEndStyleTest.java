@@ -36,4 +36,27 @@ public class NormalizeBeginEndStyleTest {
                 "end"
         ), buffer);
     }
+
+    @Test
+    public void keepsEndElseBeginOnTheSameLineWhileIndentingItCorrectly() {
+        LinkedList<String> buffer = new LinkedList<>(Arrays.asList(
+                "if (a) begin",
+                "b <= 1;",
+                "end else begin",
+                "b <= 0;",
+                "end"
+        ));
+
+        FileFormat format = new FileFormat(new FormatSetting(null));
+        new NormalizeBeginEndStyle().applyStyle(format, buffer);
+        new IndentationStyle().applyStyle(format, buffer);
+
+        Assert.assertEquals(Arrays.asList(
+                "if (a) begin",
+                "    b <= 1;",
+                "end else begin",
+                "    b <= 0;",
+                "end"
+        ), buffer);
+    }
 }

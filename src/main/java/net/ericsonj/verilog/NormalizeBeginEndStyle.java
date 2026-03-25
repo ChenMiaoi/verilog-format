@@ -12,6 +12,7 @@ public class NormalizeBeginEndStyle implements StyleImp {
     public void applyStyle(FileFormat format, LinkedList<String> buffer) {
         for (int index = 0; index < buffer.size(); index++) {
             String line = normalizeInlineBegin(buffer.get(index));
+            line = normalizeInlineEndElse(line);
             buffer.set(index, line);
 
             if (hasInlineEnd(line)) {
@@ -29,6 +30,13 @@ public class NormalizeBeginEndStyle implements StyleImp {
         String normalized = line;
         normalized = normalized.replaceAll("\\)begin\\b", ") begin");
         normalized = normalized.replaceAll("\\belsebegin\\b", "else begin");
+        return normalized;
+    }
+
+    private String normalizeInlineEndElse(String line) {
+        String normalized = line;
+        normalized = normalized.replaceAll("\\bendelse\\b", "end else");
+        normalized = normalized.replaceAll("\\bend\\s+elsebegin\\b", "end else begin");
         return normalized;
     }
 
