@@ -267,6 +267,63 @@ public class VerilogFormatPipelineTest {
     }
 
     @Test
+    public void keepsNestedSingleLineIfElseChainsBoundToTheCorrectElseBranch() {
+        Assert.assertEquals(Arrays.asList(
+                "module demo;",
+                "    always@(posedge clk) begin",
+                "        if (enable)",
+                "            if (up)",
+                "                data <= next_data;",
+                "            else if (hold)",
+                "                data <= data;",
+                "            else",
+                "                data <= backup_data;",
+                "        else",
+                "            data <= reset_data;",
+                "    end",
+                "endmodule"
+        ), VerilogFormatterTestHelper.formatLines(
+                "module demo;",
+                "always@(posedge clk) begin",
+                "if(enable)",
+                "if(up)",
+                "data<=next_data;",
+                "else if(hold)",
+                "data<=data;",
+                "else",
+                "data<=backup_data;",
+                "else",
+                "data<=reset_data;",
+                "end",
+                "endmodule"
+        ));
+    }
+
+    @Test
+    public void preservesComparisonAndAssignmentOperatorsInsideNestedControlFlow() {
+        String formatted = String.join("\n", VerilogFormatterTestHelper.formatLines(
+                "module demo;",
+                "always@(posedge clk) begin",
+                "if(enable)",
+                "if(product[21:0]!=0)",
+                "sticky<=product[22];",
+                "else",
+                "sticky<=0;",
+                "else",
+                "sticky<=sticky;",
+                "end",
+                "endmodule"
+        ));
+
+        Assert.assertTrue(formatted.contains("sticky <= product[22];"));
+        Assert.assertTrue(formatted.contains("sticky <= 0;"));
+        Assert.assertTrue(formatted.contains("product[21:0]!="));
+
+        Assert.assertFalse(formatted.contains("! ="));
+        Assert.assertFalse(formatted.contains("< ="));
+    }
+
+    @Test
     public void formatsMultipleModuleDefinitionsInOneFileWithoutDriftingIndentation() {
         Assert.assertEquals(Arrays.asList(
                 "module sha256_round(",
