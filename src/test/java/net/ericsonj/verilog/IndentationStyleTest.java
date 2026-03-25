@@ -120,4 +120,40 @@ public class IndentationStyleTest {
                 "endmodule"
         ), buffer);
     }
+
+    @Test
+    public void keepsIndentationStableAcrossManySiblingModules() {
+        LinkedList<String> buffer = new LinkedList<>(Arrays.asList(
+                "module first;",
+                "reg a;",
+                "endmodule",
+                "",
+                "module second;",
+                "reg b;",
+                "endmodule",
+                "",
+                "module third;",
+                "always @(posedge clk)",
+                "c <= d;",
+                "endmodule"
+        ));
+
+        FileFormat format = new FileFormat(new FormatSetting(null));
+        new IndentationStyle().applyStyle(format, buffer);
+
+        Assert.assertEquals(Arrays.asList(
+                "module first;",
+                "    reg a;",
+                "endmodule",
+                "",
+                "module second;",
+                "    reg b;",
+                "endmodule",
+                "",
+                "module third;",
+                "    always @(posedge clk)",
+                "        c <= d;",
+                "endmodule"
+        ), buffer);
+    }
 }
