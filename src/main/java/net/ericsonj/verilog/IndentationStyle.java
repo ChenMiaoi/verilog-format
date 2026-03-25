@@ -104,13 +104,29 @@ public class IndentationStyle implements StyleImp {
         }
 
         IfState ifState = (IfState) state;
-        if (ifState.getState() != IfState.IF_STATE.ELSE_IF
-                || ifState.getStateBlock() != IfState.BLOCK_STATE.INIT) {
+        if (ifState.getState() == IfState.IF_STATE.ELSE_IF
+                && ifState.getStateBlock() == IfState.BLOCK_STATE.INIT) {
+            if (line.matches("[ ]*\\belse\\b.*")) {
+                return;
+            }
+            format.resCountIndent();
+            format.states.poll();
+            return;
+        }
+
+        if (ifState.getStateBlock() != IfState.BLOCK_STATE.NO_BLOCK) {
+            return;
+        }
+
+        if (line.matches("[ ]*")) {
             return;
         }
 
         if (line.matches("[ ]*\\belse\\b.*")) {
-            return;
+            if (ifState.getState() == IfState.IF_STATE.IF
+                    || ifState.getState() == IfState.IF_STATE.ELSE_IF) {
+                return;
+            }
         }
 
         format.resCountIndent();

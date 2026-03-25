@@ -33,4 +33,29 @@ public class ModuleAlignTest {
                 "    );"
         ), buffer);
     }
+
+    @Test
+    public void detectsAndFormatsModuleInstantiationThroughTheDecoratorEntryPoint() {
+        LinkedList<String> buffer = new LinkedList<>(Arrays.asList(
+                "stretcher #(.WIDTH(21), .PARAM1(23), .PARAM2(55)) link_act_stretcher(",
+                ".clk(CLOCK_FIX_50),",
+                ".signal_in(led_crs),",
+                ".signal_out(LED[2])",
+                ");"
+        ));
+
+        FileFormat format = new FileFormat(new FormatSetting(null));
+        new ModuleInstantiation().applyStyle(format, buffer);
+
+        Assert.assertEquals(Arrays.asList(
+                "stretcher #(.WIDTH(21),",
+                "            .PARAM1(23),",
+                "            .PARAM2(55))",
+                "    link_act_stretcher(",
+                "        .clk(CLOCK_FIX_50),",
+                "        .signal_in(led_crs),",
+                "        .signal_out(LED[2])",
+                "    );"
+        ), buffer);
+    }
 }
