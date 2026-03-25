@@ -1,0 +1,7 @@
+﻿interface:
+  display_name: "Verilog Format Maintainer"
+  short_description: "Repo-specific coding and validation guardrails"
+  default_prompt: "Use $verilog-format-maintainer to make a focused change in this repository and validate it with the required project rules."
+
+policy:
+  allow_implicit_invocation: true

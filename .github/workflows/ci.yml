@@ -1,0 +1,99 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - "v*"
+  pull_request:
+
+jobs:
+  build:
+    name: Build and Verify (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Check formatting
+        run: cargo fmt --check
+
+      - name: Run clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Run tests
+        run: cargo test --locked
+
+      - name: Build release binary
+        run: cargo build --release --locked
+
+      - name: Verify publish package
+        run: cargo publish --dry-run --locked
+
+      - name: Package Linux artifact
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p dist
+          cp target/release/verilog-format dist/
+          cp target/release/verilog-format verilog-format-linux-x86_64
+          tar -C dist -czf verilog-format-linux-x86_64.tar.gz verilog-format
+
+      - name: Package Windows artifact
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item target/release/verilog-format.exe dist/
+          Copy-Item target/release/verilog-format.exe verilog-format-windows-x86_64.exe
+          Compress-Archive -Path dist/verilog-format.exe -DestinationPath verilog-format-windows-x86_64.zip -Force
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: verilog-format-${{ runner.os }}
+          path: |
+            verilog-format-linux-x86_64
+            verilog-format-linux-x86_64.tar.gz
+            verilog-format-windows-x86_64.exe
+            verilog-format-windows-x86_64.zip
+          if-no-files-found: ignore
+
+  release:
+    name: Publish Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Publish release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/**/verilog-format-linux-x86_64
+            artifacts/**/verilog-format-linux-x86_64.tar.gz
+            artifacts/**/verilog-format-windows-x86_64.exe
+            artifacts/**/verilog-format-windows-x86_64.zip

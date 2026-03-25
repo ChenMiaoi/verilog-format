@@ -1,221 +1,98 @@
 # Verilog Format
 
-Console application for apply format to verilog file.
+Rust CLI for formatting Verilog files.
 
-![sample](images/verilog-format.gif)
+## Usage
 
-## Runtime Requirement
+```text
+Usage: verilog-format [OPTIONS]
 
-Requires Java 8 or newer (`>= 1.8`).
-
-## How to use
-
-Application options:
-
+Options:
+  -f, --format <pathname>                 Verilog file to format
+  -p, --print                             Print formatted output instead of overwriting the file
+  -s, --settings <.verilog-format.yaml>  Explicit YAML settings file
+  -v, --version                           Print version
+  -h, --help                              Print help
 ```
-usage: [java -jar verilog-format.jar|./verilog-format|verilog-format.exe]
-       [-f <pathname>] [-h] [-p] [-s <verilog-format.properties>] [-v]
- -f,--format <pathname>                      verilog file
- -h,--help                                   print this message
- -p,--print                                  print file formated
- -s,--settings <verilog-format.properties>   settings config
- -v,--version                                verilog-format version
+
+## Configuration
+
+The formatter now uses `.verilog-format.yaml`.
+
+Resolution order:
+
+1. If `--settings` is provided, use that file.
+2. Otherwise, if the current working directory contains `.verilog-format.yaml`, use it automatically.
+3. Otherwise, use built-in defaults.
+
+Example:
+
+```yaml
+indent_width: 4
+indent_type: space
+spaces_before_trailing_comments: 1
+spaces_after_trailing_comments: 0
+spaces_before_if_statement: 1
+spaces_blocking_assignment: 1
+spaces_no_blocking_assignment: 1
+spaces_in_parentheses: false
+spaces_in_square_brackets: false
+align_blocking_assignments: true
+align_no_blocking_assignments: true
+align_line_comments: false
 ```
+
+Legacy property-style keys are still accepted in YAML for transition, for example `IndentWidth` and `AlignLineComments`.
 
 ## Examples
 
+Print a formatted file:
+
 ```sh
-## Print input_file.v formatted
-$ ./verilog-format -p -f input_file.v -s verilog-format.properties 
-
-## Format input_file.v
-$ ./verilog-format -f input_file.v -s verilog-format.properties
-
-## Format input_file.v
-## If .verilog-format.properties exist in project folder, this is used,
-## otherwise default setting is used..
-$ ./verilog-format -f input_file.v
-
+verilog-format -p -f input_file.v
 ```
 
-## Install in Linux
+Format a file in place with an explicit config:
 
-1. Clone repository.
-
-    `$ git clone https://github.com/ericsonj/verilog-format.git`
-
-2. Install verilog-format
-
-    `$ cd verilog-format/bin/`  
-    `$ sudo mkdir /opt/verilog-format`  
-    `$ sudo unzip verilog-format-LINUX.zip -d /opt/verilog-format/`
-
-3. Execute like java  
-
-    `$ java -jar /opt/verilog-format/verilog-format.jar`
-
-4. Execute like linux script  
-
-    `$ /opt/verilog-format/verilog-format`
-
-5. Install in system
-
-    `$ sudo cp /opt/verilog-format/verilog-format /usr/bin/`
-
-## Install in Windows
-
-1. Clone repository or download [verilog-format-WIN.zip](bin/verilog-format-WIN.zip)  
-
-2. Unzip and copy in your preferer folder.
-
-## Build project
-
-For build de project, Maven is needed.  
-
-`$ cd verilog-format`  
-`$ mvn clean package`  
-`$ ls target/` 
-
-## Verilog-Format Style Options
-
-This options are setting in `.verilog-format.properties` file.
-
-### Example
-
-```properties
-## File .verilog-format.properties
-IndentWidth=4
-IndentType=space
-SpacesBeforeTrailingComments=0
-SpacesAfterTrailingComments=0
-AlignLineComments=true
-AlignNoBlockingAssignments=true
-AlignBlockingAssignments=true
-SpacesInParentheses=false
-SpacesInSquareBrackets=false
+```sh
+verilog-format -f input_file.v -s path/to/.verilog-format.yaml
 ```
 
----
-### IndentWidth=[number]
+Format a file using the config from the current working directory:
 
-```verilog
-// IndentWidth=4  #(default)
-always @(posedge clk)
-    if (load == 1)
-        bitc <= 0;
-    else if (load == 0 && clk_baud == 1)
-        bitc <= bitc + 1;
-
-// IndentWidth=1
-always @(posedge clk)
- if (load == 1)
-  bitc <= 0;
- else if (load == 0 && clk_baud == 1)
-  bitc <= bitc + 1;
+```sh
+verilog-format -f input_file.v
 ```
---- 
-### IndentType=[space|tab]
-```verilog
-// IndentType=space  #(default)
-always @(posedge clk)
-    if (load == 1)
-        bitc <= 0;
-    else if (load == 0 && clk_baud == 1)
-        bitc <= bitc + 1;
 
-// IndentType=tab  #  not recommended yet
-always @(posedge clk)
-<tab>if (load == 1)
-<tab><tab>bitc <= 0;
-<tab>else if (load == 0 && clk_baud == 1)
-<tab><tab>bitc <= bitc + 1;
+## Build
+
+```sh
+cargo build --release
 ```
----
-### SpacesInParentheses=[true|false]
-```verilog
-// SpacesInParentheses=false  #(default)
-always @(posedge clk)
-    if (load == 1)
 
-// SpacesInParentheses=true
-always @( posedge clk )
-    if ( load == 1 )
+The binary will be generated at:
+
+```text
+target/release/verilog-format
+target/release/verilog-format.exe
 ```
----
 
-### SpacesInSquareBrackets=[true|false]
-```verilog
-// SpacesInSquareBrackets=false  #(default)
-reg [DW-1:0] rom [0:NPOS-1];
+## Publish Dry Run
 
-always @(posedge clk) begin
-    data <= rom[addr];
-end
+Validate that the crate can be published without actually uploading it:
 
-// SpacesInSquareBrackets=true
-reg [ DW-1:0 ] rom [ 0:NPOS-1 ];
-    
-always @(posedge clk) begin
-    data <= rom[ addr ];
+```sh
+cargo publish --dry-run
 ```
----
-### AlignBlockingAssignments=[true|false]
-```verilog
-// AlignBlockingAssignments=true  #(default)
-assign load    = (state == START) ? 1 : 0;
-assign baud_en = (state == IDLE) ? 0 : 1;
 
-// AlignBlockingAssignments=false
-assign load = (state == START) ? 1 : 0;
-assign baud_en = (state == IDLE) ? 0 : 1;
+## CI
 
-```
----
-### AlignNoBlockingAssignments=[true|false]
-```verilog
-// AlignNoBlockingAssignments=true  #(default)
-state_ts   <= IDLE;
-state_pad  <= IDLE;
-state_wait <= IDLE;
+GitHub Actions now runs a Rust-native workflow on both Linux and Windows:
 
-// AlignNoBlockingAssignments=false
-state_ts <= IDLE;
-state_pad <= IDLE;
-state_wait <= IDLE;
-```
----
-### AlignLineComments=[true|false]
-```verilog
-// AlignLineComments=false  #(default)
-always @(posedge clk) // always
-    if (load == 1)  // if
-        bitc <= 0; //
-    else if (load == 0 && clk_baud == 1) // else if
-        bitc <= bitc + 1; //
+- `cargo fmt --check`
+- `cargo clippy --all-targets --all-features -- -D warnings`
+- `cargo test --locked`
+- `cargo build --release --locked`
+- `cargo publish --dry-run --locked` on Linux and Windows
 
-// AlignLineComments=true
-always @(posedge clk)                    // always
-    if (load == 1)                       // if
-        bitc <= 0;                       //
-    else if (load == 0 && clk_baud == 1) // else if
-        bitc <= bitc + 1;                //
-```
----
-### SpacesBeforeTrailingComments=[number]
-```verilog
-// SpacesBeforeTrailingComments=1  #(default)
-localparam IDLE  = 0; //IDLE
-
-// SpacesBeforeTrailingComments=0
-localparam IDLE  = 0;//IDLE
-```
----
-### SpacesAfterTrailingComments=[number]
-```verilog
-// SpacesAfterTrailingComments=0  #(default)
-localparam IDLE  = 0; //IDLE
-
-// SpacesAfterTrailingComments=3
-localparam IDLE  = 0; //   IDLE
-```
----
+Tag pushes matching `v*` publish Linux tarballs, a directly downloadable Linux binary, Windows zip packages, and a directly downloadable Windows `.exe`.
