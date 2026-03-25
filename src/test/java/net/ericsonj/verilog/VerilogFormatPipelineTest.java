@@ -113,6 +113,71 @@ public class VerilogFormatPipelineTest {
     }
 
     @Test
+    public void formatsCaseStatementsWhoseLabelsComeFromParameters() {
+        Assert.assertEquals(Arrays.asList(
+                "module Fibnoacci(",
+                "    input clk,",
+                "    input reset,",
+                "    input in_valid,",
+                "    input [7:0]in_level,",
+                "    output reg out_valid,",
+                "    output reg [7:0]result",
+                ");",
+                "    ",
+                "    parameter [1:0] IDLE = 0, CALCULATE = 1, COMPLETE = 2;",
+                "    reg [1:0]Q, Q_NEXT;",
+                "    ",
+                "    always @(*) begin",
+                "        case (Q)",
+                "            IDLE:",
+                "                if (in_valid)",
+                "                    Q_NEXT = CALCULATE;",
+                "                else",
+                "                    Q_NEXT = IDLE;",
+                "            CALCULATE:",
+                "                if (done)",
+                "                    Q_NEXT = COMPLETE;",
+                "                else",
+                "                    Q_NEXT = CALCULATE;",
+                "            COMPLETE:",
+                "                Q_NEXT      = IDLE;",
+                "            default: Q_NEXT = IDLE;",
+                "        endcase",
+                "    end",
+                "endmodule // Fibnoacci"
+        ), VerilogFormatterTestHelper.formatLines(
+                "module Fibnoacci(input clk,",
+                "input reset,",
+                "input in_valid,",
+                "input [7:0]in_level,",
+                "output reg out_valid,",
+                "output reg [7:0]result);",
+                "",
+                "parameter [1:0] IDLE = 0, CALCULATE = 1, COMPLETE = 2;",
+                "reg [1:0]Q, Q_NEXT;",
+                "",
+                "always @(*) begin",
+                "case (Q)",
+                "IDLE:",
+                "if (in_valid)",
+                "Q_NEXT = CALCULATE;",
+                "else",
+                "Q_NEXT = IDLE;",
+                "CALCULATE:",
+                "if (done)",
+                "Q_NEXT = COMPLETE;",
+                "else",
+                "Q_NEXT = CALCULATE;",
+                "COMPLETE:",
+                "Q_NEXT      = IDLE;",
+                "default: Q_NEXT = IDLE;",
+                "endcase",
+                "end",
+                "endmodule // Fibnoacci"
+        ));
+    }
+
+    @Test
     public void honorsSettingsForParenthesesSquareBracketsAndCommentAlignment() throws Exception {
         Path settingsFile = Files.createTempFile("verilog-format", ".properties");
         Files.write(settingsFile, Arrays.asList(
