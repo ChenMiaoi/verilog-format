@@ -178,6 +178,62 @@ public class VerilogFormatPipelineTest {
     }
 
     @Test
+    public void keepsIdentifiersThatStartWithIfIntactInsideIfStatements() {
+        Assert.assertEquals(Arrays.asList(
+                "module demo;",
+                "    always @(*) begin",
+                "        if (ifmap[6] == 1) begin",
+                "            p = p + ({{24{1'b1}}, (ifmap[7]?((~((~(ifmap-1)) << 1))+1):(ifmap<<1))})<<i;",
+                "        end else begin",
+                "            p = p + ({24'b0, (ifmap[7]?((~((~(ifmap-1)) << 1))+1):(ifmap<<1))})<<i;",
+                "        end",
+                "        $display(\"\\011 = >2/\");",
+                "    end",
+                "endmodule"
+        ), VerilogFormatterTestHelper.formatLines(
+                "module demo;",
+                "always @(*) begin",
+                "if (ifmap[6] == 1) begin",
+                "p = p + ({{24{1'b1}}, (ifmap[7]?((~((~(ifmap-1)) << 1))+1):(ifmap<<1))})<<i;",
+                "end else begin",
+                "p = p + ({24'b0, (ifmap[7]?((~((~(ifmap-1)) << 1))+1):(ifmap<<1))})<<i;",
+                "end",
+                "$display(\"\\011 = >2/\");",
+                "end",
+                "endmodule"
+        ));
+    }
+
+    @Test
+    public void keepsKeywordPrefixedIdentifiersIntact() {
+        String formatted = String.join("\n", VerilogFormatterTestHelper.formatLines(
+                "module demo;",
+                "reg else_flag;",
+                "reg [3:0] endmodule_cnt;",
+                "reg [7:0] input_data;",
+                "reg [7:0] module_name;",
+                "reg [7:0] case_item;",
+                "assign module_name = input_data;",
+                "assign case_item = endmodule_cnt[3:0];",
+                "if (else_flag)",
+                "module_name = case_item;",
+                "endmodule"
+        ));
+
+        Assert.assertTrue(formatted.contains("else_flag"));
+        Assert.assertTrue(formatted.contains("endmodule_cnt"));
+        Assert.assertTrue(formatted.contains("input_data"));
+        Assert.assertTrue(formatted.contains("module_name"));
+        Assert.assertTrue(formatted.contains("case_item"));
+
+        Assert.assertFalse(formatted.contains("else _flag"));
+        Assert.assertFalse(formatted.contains("endmodule _cnt"));
+        Assert.assertFalse(formatted.contains("input _data"));
+        Assert.assertFalse(formatted.contains("module _name"));
+        Assert.assertFalse(formatted.contains("case _item"));
+    }
+
+    @Test
     public void formatsMultipleModuleDefinitionsInOneFileWithoutDriftingIndentation() {
         Assert.assertEquals(Arrays.asList(
                 "module sha256_round(",
