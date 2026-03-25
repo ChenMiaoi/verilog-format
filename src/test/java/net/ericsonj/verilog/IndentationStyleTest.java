@@ -96,4 +96,28 @@ public class IndentationStyleTest {
                 "endmodule"
         ), buffer);
     }
+
+    @Test
+    public void doesNotIndentTheSecondModuleInTheSameFile() {
+        LinkedList<String> buffer = new LinkedList<>(Arrays.asList(
+                "module first;",
+                "wire a;",
+                "endmodule",
+                "module second;",
+                "wire b;",
+                "endmodule"
+        ));
+
+        FileFormat format = new FileFormat(new FormatSetting(null));
+        new IndentationStyle().applyStyle(format, buffer);
+
+        Assert.assertEquals(Arrays.asList(
+                "module first;",
+                "    wire a;",
+                "endmodule",
+                "module second;",
+                "    wire b;",
+                "endmodule"
+        ), buffer);
+    }
 }
