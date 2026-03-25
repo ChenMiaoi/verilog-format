@@ -52,4 +52,48 @@ public class IndentationStyleTest {
                 "endmodule // demo"
         ), buffer);
     }
+
+    @Test
+    public void closesSingleLineIfBeforeTheNextSiblingStatement() {
+        LinkedList<String> buffer = new LinkedList<>(Arrays.asList(
+                "if (a)",
+                "b <= a;",
+                "f <= c;"
+        ));
+
+        FileFormat format = new FileFormat(new FormatSetting(null));
+        new IndentationStyle().applyStyle(format, buffer);
+
+        Assert.assertEquals(Arrays.asList(
+                "if (a)",
+                "    b <= a;",
+                "f <= c;"
+        ), buffer);
+    }
+
+    @Test
+    public void closesSingleLineIfInsideAlwaysBeforeTheNextStatement() {
+        LinkedList<String> buffer = new LinkedList<>(Arrays.asList(
+                "module demo;",
+                "always @(posedge clk) begin",
+                "if (write)",
+                "l_reg[l_num] <= data;",
+                "led_color <= l_reg[l_cnt];",
+                "end",
+                "endmodule"
+        ));
+
+        FileFormat format = new FileFormat(new FormatSetting(null));
+        new IndentationStyle().applyStyle(format, buffer);
+
+        Assert.assertEquals(Arrays.asList(
+                "module demo;",
+                "    always @(posedge clk) begin",
+                "        if (write)",
+                "            l_reg[l_num] <= data;",
+                "        led_color <= l_reg[l_cnt];",
+                "    end",
+                "endmodule"
+        ), buffer);
+    }
 }
