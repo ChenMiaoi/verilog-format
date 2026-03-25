@@ -41,45 +41,50 @@ public class ModuleAlign implements StyleImp {
 //        if (align.equals("BAS_Align")) {
 //            process(buffer);
 //        }
-        int startModuleLine = getIdxLineMatches(buffer, "[ ]*" + keyWord + "[ ]+[a-zA-Z0-9-_,;&$# ]*.*", 0);
-        if (startModuleLine == -1) {
-            return;
-        }
+        int offset = 0;
+        while (offset < buffer.size()) {
+            int startModuleLine = getIdxLineMatches(buffer, "[ ]*" + keyWord + "[ ]+[a-zA-Z0-9-_,;&$# ]*.*", offset);
+            if (startModuleLine == -1) {
+                return;
+            }
 
-        int endModuleLine = getEndModuleLine(buffer, startModuleLine);
-        if (endModuleLine == -1) {
-            return;
-        }
+            int endModuleLine = getEndModuleLine(buffer, startModuleLine);
+            if (endModuleLine == -1) {
+                return;
+            }
 
-        removeComments(buffer, startModuleLine, endModuleLine);
+            commnets.clear();
+            removeComments(buffer, startModuleLine, endModuleLine);
 
-        String moduleDef = getModuleInLine(buffer, startModuleLine, endModuleLine);
+            String moduleDef = getModuleInLine(buffer, startModuleLine, endModuleLine);
 
-        LinkedList<String> resp = BASAlign(format, moduleDef);
+            LinkedList<String> resp = BASAlign(format, moduleDef);
 
-        int commentAlign = getMostLargeLineSize(resp);
+            int commentAlign = getMostLargeLineSize(resp);
 
-        for (int i = 0; i < resp.size(); i++) {
-            String line = resp.get(i);
-            String[] words = line.split(" ");
-            String lastWord = words[words.length - 1];
-            if (commnets.containsKey(lastWord)) {
-                LinkedList<String> lines = getCommentAlign(line, commentAlign, commnets.get(lastWord));
-                resp.remove(i);
-                resp.addAll(i, lines);
-            } else {
-                if (lastWord.matches("[^ ]+[)];")) {
-                    String newWordKey = lastWord.replace(");", "");
-                    if (commnets.containsKey(newWordKey)) {
-                        LinkedList<String> lines = getCommentAlign(line, commentAlign, commnets.get(newWordKey));
-                        resp.remove(i);
-                        resp.addAll(i, lines);
+            for (int i = 0; i < resp.size(); i++) {
+                String line = resp.get(i);
+                String[] words = line.split(" ");
+                String lastWord = words[words.length - 1];
+                if (commnets.containsKey(lastWord)) {
+                    LinkedList<String> lines = getCommentAlign(line, commentAlign, commnets.get(lastWord));
+                    resp.remove(i);
+                    resp.addAll(i, lines);
+                } else {
+                    if (lastWord.matches("[^ ]+[)];")) {
+                        String newWordKey = lastWord.replace(");", "");
+                        if (commnets.containsKey(newWordKey)) {
+                            LinkedList<String> lines = getCommentAlign(line, commentAlign, commnets.get(newWordKey));
+                            resp.remove(i);
+                            resp.addAll(i, lines);
+                        }
                     }
                 }
             }
-        }
 
-        replaceInBuffer(buffer, startModuleLine, endModuleLine, resp);
+            replaceInBuffer(buffer, startModuleLine, endModuleLine, resp);
+            offset = startModuleLine + resp.size();
+        }
 
     }
 
@@ -235,7 +240,12 @@ public class ModuleAlign implements StyleImp {
             return resp;
         }
 
-        LinkedList<String> portArgs = alignInstanceBrackets(splitTopLevelArgs(moduleArgs));
+        LinkedList<String> portArgs = splitTopLevelArgs(moduleArgs);
+        if ("module".equals(keyWord)) {
+            portArgs = alignModulePortDeclarations(portArgs);
+        } else {
+            portArgs = alignInstanceBrackets(portArgs);
+        }
         int lastLine = resp.size() - 1;
         if (portArgs.size() == 1) {
             resp.set(lastLine, resp.get(lastLine) + moduleArgs + content.substring(endBracket));
@@ -325,6 +335,30 @@ public class ModuleAlign implements StyleImp {
         return args;
     }
 
+    private LinkedList<String> alignModulePortDeclarations(LinkedList<String> args) {
+        LinkedList<String> alignedArgs = new LinkedList<>();
+        String currentDeclarationPrefix = null;
+
+        for (String arg : args) {
+            String declarationPrefix = getModulePortDeclarationPrefix(arg);
+            if (declarationPrefix != null) {
+                currentDeclarationPrefix = declarationPrefix;
+                alignedArgs.add(arg);
+                continue;
+            }
+
+            if (currentDeclarationPrefix != null && isBareIdentifier(arg)) {
+                alignedArgs.add(getSpaces(currentDeclarationPrefix.length() + 1) + arg.trim());
+                continue;
+            }
+
+            currentDeclarationPrefix = null;
+            alignedArgs.add(arg);
+        }
+
+        return alignedArgs;
+    }
+
     private LinkedList<String> alignInstanceBrackets(LinkedList<String> args) {
         int maxPortNameLength = 0;
         LinkedList<String> alignedArgs = new LinkedList<>();
@@ -374,6 +408,24 @@ public class ModuleAlign implements StyleImp {
         }
 
         return portName;
+    }
+
+    private String getModulePortDeclarationPrefix(String arg) {
+        String trimmed = arg.trim();
+        if (!trimmed.matches("^(input|output|inout)\\b.*\\b[A-Za-z_][A-Za-z0-9_$]*$")) {
+            return null;
+        }
+
+        int splitIndex = trimmed.lastIndexOf(' ');
+        if (splitIndex == -1) {
+            return null;
+        }
+
+        return trimmed.substring(0, splitIndex).trim();
+    }
+
+    private boolean isBareIdentifier(String arg) {
+        return arg.trim().matches("^[A-Za-z_][A-Za-z0-9_$]*$");
     }
 
     private void removeComments(LinkedList<String> buffer, int startModuleLine, int endModuleLine) {
