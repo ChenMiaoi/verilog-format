@@ -234,6 +234,39 @@ public class VerilogFormatPipelineTest {
     }
 
     @Test
+    public void keepsOuterElseAlignedAfterNestedSingleLineIfElse() {
+        Assert.assertEquals(Arrays.asList(
+                "module demo;",
+                "    always@(posedge clk or negedge rstn) begin",
+                "        if (!rstn)",
+                "            led_reg <= 8'b00000000;",
+                "        else if (flag_1s)",
+                "            if (led_reg == 8'b00000000)",
+                "                led_reg <= 8'b11111110;",
+                "            else",
+                "                led_reg <= {led_reg[6:0],led_reg[7]};",
+                "        else",
+                "            led_reg <= led_reg;",
+                "    end",
+                "endmodule"
+        ), VerilogFormatterTestHelper.formatLines(
+                "module demo;",
+                "always@(posedge clk or negedge rstn) begin",
+                "if(!rstn)",
+                "led_reg<=8'b00000000;",
+                "else if(flag_1s)",
+                "if(led_reg == 8'b00000000)",
+                "led_reg<=8'b11111110;",
+                "else",
+                "led_reg<={led_reg[6:0],led_reg[7]};",
+                "else",
+                "led_reg<=led_reg;",
+                "end",
+                "endmodule"
+        ));
+    }
+
+    @Test
     public void formatsMultipleModuleDefinitionsInOneFileWithoutDriftingIndentation() {
         Assert.assertEquals(Arrays.asList(
                 "module sha256_round(",
