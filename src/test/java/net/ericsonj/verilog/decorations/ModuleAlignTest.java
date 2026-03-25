@@ -27,9 +27,9 @@ public class ModuleAlignTest {
                 "            .PARAM1(23),",
                 "            .PARAM2(55))",
                 "    link_act_stretcher(",
-                "        .clk(CLOCK_FIX_50),",
-                "        .signal_in(led_crs),",
-                "        .signal_out(LED[2])",
+                "        .clk        (CLOCK_FIX_50),",
+                "        .signal_in  (led_crs),",
+                "        .signal_out (LED[2])",
                 "    );"
         ), buffer);
     }
@@ -52,10 +52,32 @@ public class ModuleAlignTest {
                 "            .PARAM1(23),",
                 "            .PARAM2(55))",
                 "    link_act_stretcher(",
-                "        .clk(CLOCK_FIX_50),",
-                "        .signal_in(led_crs),",
-                "        .signal_out(LED[2])",
+                "        .clk        (CLOCK_FIX_50),",
+                "        .signal_in  (led_crs),",
+                "        .signal_out (LED[2])",
                 "    );"
+        ), buffer);
+    }
+
+    @Test
+    public void alignsNamedInstancePortParenthesesToTheLongestPortName() {
+        LinkedList<String> buffer = new LinkedList<>(Arrays.asList(
+                "pos_buffer pos_bufferEx01(",
+                ".fifo_rdreq(fifo_rdreq),",
+                ".fifo_rddata(fifo_rddata),",
+                ".fifo_usedw(fifo_usedw)",
+                ");"
+        ));
+
+        FileFormat format = new FileFormat(new FormatSetting(null));
+        new ModuleInstantiation().applyStyle(format, buffer);
+
+        Assert.assertEquals(Arrays.asList(
+                "pos_buffer pos_bufferEx01(",
+                "    .fifo_rdreq  (fifo_rdreq),",
+                "    .fifo_rddata (fifo_rddata),",
+                "    .fifo_usedw  (fifo_usedw)",
+                ");"
         ), buffer);
     }
 }

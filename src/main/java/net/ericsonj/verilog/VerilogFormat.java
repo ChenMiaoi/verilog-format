@@ -109,6 +109,7 @@ public class VerilogFormat extends ConsoleApplication {
         vFile.addStyle(new NormalizeBeginEndStyle());
         vFile.addStyle(new IndentationStyle());
         vFile.addStyle(new ModuleAlign());
+        vFile.addStyle(new ModuleInstantiation());
         vFile.addStyle(new SpacesTrailingComment());
         vFile.addStyle(new SpacesBeforeIfStatement());
         vFile.addStyle(new SpacesBlockingAssignment());

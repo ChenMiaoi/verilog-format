@@ -8,6 +8,7 @@ import net.ericsonj.verilog.decorations.AlignBlockingAssignments;
 import net.ericsonj.verilog.decorations.AlignLineComment;
 import net.ericsonj.verilog.decorations.AlignNoBlockingAssignments;
 import net.ericsonj.verilog.decorations.ModuleAlign;
+import net.ericsonj.verilog.decorations.ModuleInstantiation;
 import net.ericsonj.verilog.decorations.SpacesBeforeIfStatement;
 import net.ericsonj.verilog.decorations.SpacesBlockingAssignment;
 import net.ericsonj.verilog.decorations.SpacesInParentheses;
@@ -45,6 +46,7 @@ final class VerilogFormatterTestHelper {
         file.addStyle(new NormalizeBeginEndStyle());
         file.addStyle(new IndentationStyle());
         file.addStyle(new ModuleAlign());
+        file.addStyle(new ModuleInstantiation());
         file.addStyle(new SpacesTrailingComment());
         file.addStyle(new SpacesBeforeIfStatement());
         file.addStyle(new SpacesBlockingAssignment());
@@ -62,6 +64,7 @@ final class VerilogFormatterTestHelper {
         new NormalizeBeginEndStyle().applyStyle(format, buffer);
         new IndentationStyle().applyStyle(format, buffer);
         new ModuleAlign().applyStyle(format, buffer);
+        new ModuleInstantiation().applyStyle(format, buffer);
         new SpacesTrailingComment().applyStyle(format, buffer);
         new SpacesBeforeIfStatement().applyStyle(format, buffer);
         new SpacesBlockingAssignment().applyStyle(format, buffer);

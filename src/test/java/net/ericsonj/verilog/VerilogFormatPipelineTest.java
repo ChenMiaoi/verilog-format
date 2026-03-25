@@ -92,6 +92,27 @@ public class VerilogFormatPipelineTest {
     }
 
     @Test
+    public void formatsModuleInstantiationsThroughTheDefaultPipeline() {
+        Assert.assertEquals(Arrays.asList(
+                "module demo;",
+                "    pos_buffer pos_bufferEx01(",
+                "        .fifo_rdreq  (fifo_rdreq),",
+                "        .fifo_rddata (fifo_rddata),",
+                "        .fifo_usedw  (fifo_usedw)",
+                "    );",
+                "endmodule"
+        ), VerilogFormatterTestHelper.formatLines(
+                "module demo;",
+                "pos_buffer pos_bufferEx01(",
+                ".fifo_rdreq(fifo_rdreq),",
+                ".fifo_rddata(fifo_rddata),",
+                ".fifo_usedw(fifo_usedw)",
+                ");",
+                "endmodule"
+        ));
+    }
+
+    @Test
     public void honorsSettingsForParenthesesSquareBracketsAndCommentAlignment() throws Exception {
         Path settingsFile = Files.createTempFile("verilog-format", ".properties");
         Files.write(settingsFile, Arrays.asList(
