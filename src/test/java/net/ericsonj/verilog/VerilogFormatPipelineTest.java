@@ -289,6 +289,40 @@ public class VerilogFormatPipelineTest {
     }
 
     @Test
+    public void leavesParameterlessModuleBodiesOnSeparateLines() {
+        Assert.assertEquals(Arrays.asList(
+                "module ECN125_receive_position_tb;",
+                "    ",
+                "    reg sysclk;",
+                "    reg reset_n;",
+                "    reg encoder_clk;",
+                "    int norm_pos_cnt;",
+                "    reg UUT_encoder_dir;",
+                "    ",
+                "    ECN125_receive_position UUT (",
+                "        .sysclk  (sysclk),",
+                "        .reset_n (reset_n),",
+                "        .DEBUG   (GPIO[6:4])",
+                "    );",
+                "endmodule"
+        ), VerilogFormatterTestHelper.formatLines(
+                "module ECN125_receive_position_tb;",
+                "",
+                "reg sysclk;",
+                "reg reset_n;",
+                "reg encoder_clk;",
+                "int norm_pos_cnt;",
+                "reg UUT_encoder_dir;",
+                "",
+                "ECN125_receive_position UUT (",
+                ".sysclk(sysclk),",
+                ".reset_n(reset_n),",
+                ".DEBUG(GPIO[6:4]));",
+                "endmodule"
+        ));
+    }
+
+    @Test
     public void honorsSettingsForParenthesesSquareBracketsAndCommentAlignment() throws Exception {
         Path settingsFile = Files.createTempFile("verilog-format", ".properties");
         Files.write(settingsFile, Arrays.asList(
