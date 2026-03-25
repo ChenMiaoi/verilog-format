@@ -106,6 +106,7 @@ public class VerilogFormat extends ConsoleApplication {
     private void formatFile(File file) {
         FileFormat format = new FileFormat(this.settings);
         VerilogFile vFile = new VerilogFile(file.getAbsolutePath(), format);
+        vFile.addStyle(new NormalizeBeginEndStyle());
         vFile.addStyle(new IndentationStyle());
         vFile.addStyle(new ModuleAlign());
         vFile.addStyle(new SpacesTrailingComment());
